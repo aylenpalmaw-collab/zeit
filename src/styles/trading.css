@@ -1,0 +1,84 @@
+.trading-panel {
+
+  margin-top: 24px;
+
+  padding: 22px;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,0.95),
+      rgba(5,10,25,0.98)
+    );
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 0 25px rgba(34,197,94,0.05);
+}
+
+.trading-panel.buy {
+
+  border-color:
+    rgba(34,197,94,0.4);
+}
+
+.trading-panel.sell {
+
+  border-color:
+    rgba(239,68,68,0.4);
+}
+
+.trading-panel.hold {
+
+  border-color:
+    rgba(59,130,246,0.4);
+}
+
+.trading-panel.wait {
+
+  border-color:
+    rgba(148,163,184,0.3);
+}
+
+.trading-label {
+
+  font-size: 11px;
+
+  letter-spacing: 4px;
+
+  color:
+    rgba(255,255,255,0.45);
+
+  margin-bottom: 12px;
+}
+
+.trading-signal {
+
+  font-size: 38px;
+
+  font-weight: 700;
+
+  margin-bottom: 10px;
+
+  color: white;
+}
+
+.trading-confidence {
+
+  color:
+    rgba(255,255,255,0.7);
+
+  margin-bottom: 12px;
+}
+
+.trading-message {
+
+  color:
+    rgba(255,255,255,0.72);
+
+  line-height: 1.6;
+}

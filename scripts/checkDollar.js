@@ -1,7 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
 import admin from 'firebase-admin'
 import fetch from 'node-fetch'
 import { analyzeOpportunity } from '../src/utils/opportunityEngine.js'
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
 /*
 =====================================
@@ -25,15 +27,6 @@ SUPABASE
 =====================================
 */
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY,
-  {
-    realtime: {
-      enabled: false
-    }
-  }
-)
 
 /*
 =====================================
@@ -75,14 +68,21 @@ async function run() {
     const data = await fetchDollar()
     const currentPrice = data.venta
 
-    const { data: historyData } = await supabase
-      .from('history')
-      .select('*')
-      .order('created_at', { ascending: true })
+    const resHistory = await fetch(
+  `${SUPABASE_URL}/rest/v1/history?select=*`,
+  {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  }
+)
 
-    const history = historyData.map((h) => ({
-      value: h.price
-    }))
+const historyData = await resHistory.json()
+
+const history = historyData.map((h) => ({
+  value: h.price
+}))
 
     const opportunity = analyzeOpportunity({
       currentPrice,
@@ -94,9 +94,17 @@ async function run() {
       return
     }
 
-    const { data: tokens } = await supabase
-      .from('fcm_tokens')
-      .select('token')
+    const resTokens = await fetch(
+  `${SUPABASE_URL}/rest/v1/fcm_tokens?select=token`,
+  {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  }
+)
+
+const tokens = await resTokens.json()
 
     for (const t of tokens) {
       await sendPush({

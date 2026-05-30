@@ -68,6 +68,10 @@ import './styles/forecast.css'
 import './styles/ai.css'
 import './styles/trading.css'
 
+import {
+  requestNotificationPermission
+} from './services/notificationService'
+
 function App() {
 
   const [price, setPrice] =
@@ -599,6 +603,8 @@ function App() {
 
     async function loadData() {
 
+      await requestNotificationPermission()
+
       const dbHistory =
         await fetchHistory()
 
@@ -728,34 +734,6 @@ function App() {
 
       <div className="card">
 
-        <div className="market-bar">
-
-          <div className="market-item">
-
-            <span className="market-title">
-              SESSION
-            </span>
-
-            <span className="market-value market-open">
-              OPEN
-            </span>
-
-          </div>
-
-          <div className="market-item">
-
-            <span className="market-title">
-              UPDATE
-            </span>
-
-            <span className="market-value">
-              REALTIME
-            </span>
-
-          </div>
-
-        </div>
-
         <p className="label">
           USD OFICIAL BNA
         </p>
@@ -778,94 +756,23 @@ function App() {
 
         <div className="divider"></div>
 
-        <div className="market-bar">
-
-          <div className="market-item">
-
-            <span className="market-title">
-              SYSTEM TIME
-            </span>
-
-            <span className="market-value">
-              {currentTime}
-            </span>
-
-          </div>
-
-          <div className="market-item">
-
-            <span className="market-title">
-              MARKET
-            </span>
-
-            <span
-              className={`market-value ${
-                marketStatus === 'OPEN'
-                  ? 'market-open'
-                  : 'market-closed'
-              }`}
-            >
-              {marketStatus}
-            </span>
-
-          </div>
-
-        </div>
-
         <ChartPanel
           history={history}
         />
 
-        <StatsGrid
-
-          minPrice={minPrice}
-
-          maxPrice={maxPrice}
-
-          analysis={analysis}
-        />
-
-        <ForecastPanel
-          forecast={forecast}
-        />
-
         <TradingSignal
-          tradingSignal={tradingSignal}
-        />
+  tradingSignal={tradingSignal}
+/>
 
-        <AnalysisPanel
+<AnalysisPanel
+  analysis={analysis}
+  forecast={forecast}
+/>
 
-          analysis={analysis}
-
-          forecast={forecast}
-
-          riskLevel={
-            riskData.riskLevel
-          }
-
-          riskScore={
-            riskData.riskScore
-          }
-        />
-
-        <AlertsPanel
-
-          alerts={alerts}
-
-          dismissAlert={
-            dismissAlert
-          }
-        />
-
-        <p className="updated">
-
-          Última actualización:
-
-          {' '}
-
-          {updated}
-
-        </p>
+<AlertsPanel
+  alerts={alerts}
+  dismissAlert={dismissAlert}
+/>
 
       </div>
 

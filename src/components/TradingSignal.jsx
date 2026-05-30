@@ -4,6 +4,16 @@ function TradingSignal({
 
 }) {
 
+  const signalText = {
+
+    BUY: 'COMPRAR',
+
+    SELL: 'VENDER',
+
+    HOLD: 'ESPERAR'
+
+  }
+
   return (
 
     <div
@@ -14,18 +24,17 @@ function TradingSignal({
     >
 
       <p className="trading-label">
-        TRADING SIGNAL
+        RECOMENDACIÓN
       </p>
 
       <h2 className="trading-signal">
-        {tradingSignal.signal}
+        {
+          signalText[
+            tradingSignal.signal
+          ] ||
+          tradingSignal.signal
+        }
       </h2>
-
-      <p className="trading-confidence">
-        Confidence:
-        {' '}
-        {tradingSignal.confidence}
-      </p>
 
       <p className="trading-message">
         {tradingSignal.message}

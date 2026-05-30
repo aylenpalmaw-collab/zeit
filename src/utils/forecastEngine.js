@@ -30,10 +30,10 @@ export function generateForecast({
     `$${price}`
 
   let marketMessage =
-    'No se detectan cambios fuertes en el mercado.'
+    'El precio se mantiene estable desde hace varios días.'
 
   let adviceText =
-    'Conviene esperar movimientos más claros antes de tomar decisiones.'
+    'Por ahora no se observan cambios importantes.'
 
   /*
   =====================================
@@ -69,13 +69,13 @@ export function generateForecast({
 
     marketMessage =
       intensity === 'HIGH'
-        ? 'El mercado viene mostrando una subida constante y con fuerza.'
-        : 'Se observa una tendencia positiva moderada.'
+        ? 'El dólar está subiendo más de lo habitual y mantiene una tendencia clara.'
+        : 'El dólar viene subiendo de forma tranquila durante los últimos días.'
 
     adviceText =
       intensity === 'HIGH'
-        ? 'Hay bastante movimiento positivo. Conviene seguir el comportamiento de cerca.'
-        : 'El mercado parece saludable, aunque todavía sin movimientos extremos.'
+        ? 'Si la tendencia continúa, podrían verse nuevos aumentos en el corto plazo.'
+        : 'Por ahora la tendencia sigue siendo positiva, aunque sin cambios bruscos.'
   }
 
   /*
@@ -112,13 +112,13 @@ export function generateForecast({
 
     marketMessage =
       intensity === 'HIGH'
-        ? 'El mercado viene cayendo con bastante intensidad.'
-        : 'Se detecta una baja moderada en los últimos movimientos.'
+        ? 'El dólar está bajando más de lo habitual y muestra una caída clara.'
+        : 'El precio viene bajando de forma gradual respecto a los últimos días.'
 
     adviceText =
       intensity === 'HIGH'
-        ? 'Hay bastante inestabilidad. Conviene actuar con cautela.'
-        : 'El mercado perdió algo de fuerza en las últimas horas.'
+        ? 'Conviene seguir la evolución del precio antes de tomar decisiones apresuradas.'
+        : 'Por ahora la baja sigue siendo moderada y sin movimientos bruscos.'
   }
 
   /*
@@ -134,10 +134,10 @@ export function generateForecast({
     aiConfidence = 'Alta'
 
     marketMessage +=
-      ' Además, hay bastante volatilidad.'
+      ' Además, se están viendo movimientos más bruscos de lo habitual.'
 
     adviceText =
-      'Se recomienda prudencia hasta que el mercado se estabilice.'
+      'Conviene esperar un poco más de estabilidad antes de sacar conclusiones.'
   }
 
   return {
@@ -159,5 +159,6 @@ export function generateForecast({
     marketMessage,
 
     adviceText
+
   }
 }

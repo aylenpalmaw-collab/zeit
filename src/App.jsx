@@ -10,10 +10,6 @@ import {
 } from './utils/forecastEngine'
 
 import {
-  generateAlerts
-} from './utils/alertSystem'
-
-import {
   fetchDollarPrice
 } from './services/dollarApi'
 
@@ -27,27 +23,9 @@ import AnalysisPanel from './components/AnalysisPanel'
 
 import AlertsPanel from './components/AlertsPanel'
 
-import TradingSignal from './components/TradingSignal'
-
-import {
-  generateTradingSignal
-} from './utils/tradingSignal'
-
 import {
   analyzeTrend
 } from './utils/trendEngine'
-
-import {
-  calculateRisk
-} from './utils/riskEngine'
-
-import {
-  detectAnomaly
-} from './utils/anomalyDetector'
-
-import {
-  generateSignal
-} from './utils/signalEngine'
 
 import supabase
 from './lib/supabase'
@@ -72,6 +50,14 @@ import {
   requestNotificationPermission
 } from './services/notificationService'
 
+import {
+  getNotificationToken
+} from './services/firebaseMessaging'
+
+import {
+  analyzeOpportunity
+} from './utils/opportunityEngine'
+
 function App() {
 
   const [price, setPrice] =
@@ -90,14 +76,6 @@ function App() {
 
   const [history, setHistory] =
     useState([])
-
-  const [anomaly, setAnomaly] =
-    useState(null)
-
-  const [
-    lastAlertTimes,
-    setLastAlertTimes
-  ] = useState({})
 
   const {
     currentTime,
@@ -121,37 +99,6 @@ function App() {
   const trendData =
     analyzeTrend(history)
 
-  const riskData =
-    calculateRisk({
-
-      volatility:
-        analysis.volatility,
-
-      intensity:
-        trendData.intensity,
-
-      percentChange:
-        analysis.percentChange
-    })
-
-  const signalData =
-    generateSignal({
-
-      direction:
-        trendData.direction,
-
-      intensity:
-        trendData.intensity,
-
-      volatility:
-        analysis.volatility,
-
-      riskLevel:
-        riskData.riskLevel,
-
-      anomaly
-    })
-
   const forecast =
     generateForecast({
 
@@ -173,24 +120,6 @@ function App() {
         trendData.movement
     })
 
-  const tradingSignal =
-    generateTradingSignal({
-
-      trend:
-        analysis.trend,
-
-      percentChange:
-        Number(
-          analysis.percentChange
-        ),
-
-      volatility:
-        analysis.volatility,
-
-      stableDays:
-        analysis.stableDays
-    })
-
   /*
   =====================================
   FETCH DOLLAR
@@ -204,15 +133,23 @@ function App() {
       const data =
         await fetchDollarPrice()
 
-      const simulatedPrice =
+      const currentPrice =
         data.venta
+
+      const opportunity =
+  analyzeOpportunity({
+
+      currentPrice,
+
+    history
+  })
 
       if (price !== 0) {
 
         setPreviousPrice(price)
       }
 
-      setPrice(simulatedPrice)
+      setPrice(currentPrice)
 
       /*
       =====================================
@@ -220,283 +157,69 @@ function App() {
       =====================================
       */
 
-      const generatedAlerts =
-        generateAlerts({
+      const generatedAlerts = []
 
-          price:
-            simulatedPrice,
+if (opportunity) {
 
-          previousPrice:
-            price === 0
-              ? null
-              : price,
+  generatedAlerts.push({
 
-          history
-        })
+    type:
+      opportunity.type,
+
+    title:
+      opportunity.title,
+
+    message:
+      opportunity.message
+  })
+}
 
       /*
       =====================================
       ANOMALY
       =====================================
       */
+      if (
+  generatedAlerts.length > 0
+) {
 
-      const detectedAnomaly =
-        detectAnomaly({
+  setAlerts((prev) => {
 
-          price:
-            simulatedPrice,
+    const validAlerts =
+      generatedAlerts.filter(
+        (newAlert) =>
 
-          history
-        })
+          !prev.some(
+            (existing) =>
 
-      setAnomaly(
-        detectedAnomaly
+              existing.type ===
+              newAlert.type
+          )
       )
 
-      /*
-      =====================================
-      SMART ALERTS
-      =====================================
-      */
+    return [
 
-      const businessHistory =
-        history.filter(
-          (item) =>
-            item.businessDay
-        )
+      ...validAlerts.map(
+        (alert) => ({
 
-      const last7Days =
-        businessHistory.slice(-7)
+          ...alert,
 
-      const averagePrice =
-        last7Days.length > 0
+          id:
+            Date.now() +
+            Math.random(),
 
-          ? Math.round(
-
-              last7Days.reduce(
-                (acc, item) =>
-                  acc + item.value,
-                0
-              ) / last7Days.length
-            )
-
-          : data.venta
-
-      const difference =
-        simulatedPrice -
-        averagePrice
-
-      /*
-      =====================================
-      TREND ALERTS
-      =====================================
-      */
-
-      if (
-
-        analysis.trend === 'UP' &&
-
-        Number(
-          analysis.percentChange
-        ) >= 2
-      ) {
-
-        generatedAlerts.push({
-
-          type: 'up',
-
-          message:
-            '📈 Hace varios días que el dólar viene subiendo.'
+          time:
+            new Date()
+              .toLocaleTimeString(
+                'es-AR'
+              )
         })
-      }
+      ),
 
-      if (
-
-        analysis.trend === 'DOWN' &&
-
-        Number(
-          analysis.percentChange
-        ) <= -2
-      ) {
-
-        generatedAlerts.push({
-
-          type: 'down',
-
-          message:
-            '📉 El dólar viene bajando hace días.'
-        })
-      }
-
-      /*
-      =====================================
-      STABLE MARKET
-      =====================================
-      */
-
-      if (
-        analysis.stableDays >= 5
-      ) {
-
-        generatedAlerts.push({
-
-          type: 'neutral',
-
-          message:
-            '😴 Mercado muy estable últimamente.'
-        })
-      }
-
-      /*
-      =====================================
-      OPPORTUNITY
-      =====================================
-      */
-
-      if (
-        difference <= -10
-      ) {
-
-        generatedAlerts.push({
-
-          type: 'down',
-
-          message:
-            '💡 El valor actual está más bajo que el promedio reciente.'
-        })
-      }
-
-      if (
-        difference >= 15
-      ) {
-
-        generatedAlerts.push({
-
-          type: 'up',
-
-          message:
-            '⚠ El valor actual está bastante por encima del promedio reciente.'
-        })
-      }
-
-      /*
-      =====================================
-      ANOMALY ALERT
-      =====================================
-      */
-
-      if (detectedAnomaly) {
-
-        generatedAlerts.push({
-
-          type:
-            detectedAnomaly.type,
-
-          message:
-            detectedAnomaly.message
-        })
-      }
-
-      /*
-      =====================================
-      ALERT COOLDOWN
-      =====================================
-      */
-
-      const ALERT_COOLDOWN =
-        1000 * 60 * 30
-
-      const currentTimestamp =
-        Date.now()
-
-      if (
-        generatedAlerts.length > 0
-      ) {
-
-        setAlerts((prev) => {
-
-          const validAlerts =
-            generatedAlerts.filter(
-              (newAlert) => {
-
-                const lastTime =
-                  lastAlertTimes[
-                    newAlert.message
-                  ]
-
-                const cooldownPassed =
-
-                  !lastTime ||
-
-                  currentTimestamp -
-                    lastTime >
-                    ALERT_COOLDOWN
-
-                const alreadyExists =
-                  prev.some(
-                    (existing) =>
-
-                      existing.message ===
-                      newAlert.message
-                  )
-
-                return (
-
-                  cooldownPassed &&
-
-                  !alreadyExists
-                )
-              }
-            )
-
-          if (
-            validAlerts.length > 0
-          ) {
-
-            setLastAlertTimes(
-              (prevTimes) => {
-
-                const updatedTimes =
-                  { ...prevTimes }
-
-                validAlerts.forEach(
-                  (alert) => {
-
-                    updatedTimes[
-                      alert.message
-                    ] =
-                      currentTimestamp
-                  }
-                )
-
-                return updatedTimes
-              }
-            )
-          }
-
-          return [
-
-            ...validAlerts.map(
-              (alert) => ({
-
-                ...alert,
-
-                id:
-                  Date.now() +
-                  Math.random(),
-
-                time:
-                  new Date()
-                    .toLocaleTimeString(
-                      'es-AR'
-                    )
-              })
-            ),
-
-            ...prev
-          ]
-        })
-      }
+      ...prev
+    ]
+  })
+}
 
       /*
       =====================================
@@ -504,23 +227,49 @@ function App() {
       =====================================
       */
 
-      await supabase
+      const now = new Date()
 
-        .from('history')
+const currentHour =
 
-        .insert([{
+  `${now.getFullYear()}-` +
+  `${String(now.getMonth() + 1).padStart(2, '0')}-` +
+  `${String(now.getDate()).padStart(2, '0')} ` +
+  `${String(now.getHours()).padStart(2, '0')}:00`
 
-          price:
-            simulatedPrice,
+const { data: existingHour } =
+  await supabase
 
-          trend:
-            trendData.direction,
+    .from('history')
 
-          volatility:
-            analysis.volatility,
+    .select('id')
 
-          business_day: true
-        }])
+    .gte(
+      'created_at',
+      currentHour
+    )
+
+    .limit(1)
+
+if (!existingHour?.length) {
+
+  await supabase
+
+    .from('history')
+
+    .insert([{
+
+      price:
+        currentPrice,
+
+      trend:
+        trendData.direction,
+
+      volatility:
+        analysis.volatility,
+
+      business_day: true
+    }])
+}
 
       /*
       =====================================
@@ -537,7 +286,7 @@ function App() {
 
         if (
           lastEntry?.value ===
-          simulatedPrice
+          currentPrice
         ) {
 
           return prevHistory
@@ -550,7 +299,7 @@ function App() {
           {
 
             value:
-              simulatedPrice,
+              currentPrice,
 
             businessDay: true
           }
@@ -604,6 +353,7 @@ function App() {
     async function loadData() {
 
       await requestNotificationPermission()
+      await getNotificationToken()
 
       const dbHistory =
         await fetchHistory()
@@ -759,10 +509,6 @@ function App() {
         <ChartPanel
           history={history}
         />
-
-        <TradingSignal
-  tradingSignal={tradingSignal}
-/>
 
 <AnalysisPanel
   analysis={analysis}

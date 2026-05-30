@@ -23,6 +23,9 @@ export function generateForecast({
   let forecastTitle =
     'Mercado estable'
 
+  let trendLabel =
+  'Mercado estable'
+
   let forecastProbability =
     '50%'
 
@@ -46,6 +49,9 @@ export function generateForecast({
   ) {
 
     aiSignal = 'UPTREND'
+
+    trendLabel =
+  'Tendencia alcista'
 
     aiClass = 'up'
 
@@ -89,6 +95,9 @@ export function generateForecast({
   ) {
 
     aiSignal = 'DOWNTREND'
+
+    trendLabel =
+  'Tendencia bajista'
 
     aiClass = 'down'
 
@@ -142,6 +151,8 @@ export function generateForecast({
 
   return {
 
+    trendLabel,
+    
     aiSignal,
 
     aiClass,
